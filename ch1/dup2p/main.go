@@ -13,12 +13,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type fileSet map[string]struct{}
 
 type lineCount struct {
-	line  string
 	files fileSet
 	count int
 }
@@ -35,23 +35,23 @@ func main() {
 				fmt.Fprintf(os.Stderr, "dup2: %v\n", err)
 				continue
 			}
+			// NOTE: for limited resources, you might want to use
+			defer f.Close()
 			countLines(f, counts)
-			f.Close()
+			// NOTE: avoid stacking too many open files
+			// f.Close()
 		}
 	}
 	for line, n := range counts {
 		count := n.count
 		if count > 1 {
 			fmt.Printf("%d\t%s\t", count, line)
-			i := 0
+
+			var fileNames []string
 			for file := range n.files {
-				if i > 0 {
-					fmt.Printf(", ")
-				}
-				fmt.Printf("%s", file)
-				i++
+				fileNames = append(fileNames, file)
 			}
-			fmt.Println()
+			fmt.Println(strings.Join(fileNames, ", "))
 		}
 	}
 }
@@ -60,20 +60,18 @@ func countLines(f *os.File, counts map[string]lineCount) {
 	input := bufio.NewScanner(f)
 	for input.Scan() {
 		line := input.Text()
-		lc, ok := counts[line]
-		if !ok {
-			lc = lineCount{
-				line:  line,
-				files: make(fileSet),
-				count: 1,
-			}
-		} else {
-			lc.count++
+		entry := counts[line]
+		if entry.files == nil {
+			entry.files = make(fileSet)
 		}
-		lc.files[f.Name()] = struct{}{}
-		counts[line] = lc
+		entry.count++
+		entry.files[f.Name()] = struct{}{}
+		// Store the updated entry back in the map
+		counts[line] = entry
 	}
-	// NOTE: ignoring potential errors from input.Err()
+	if err := input.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "dup2: reading %s: %v\n", f.Name(), err)
+	}
 }
 
 //!-
