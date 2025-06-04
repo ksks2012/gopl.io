@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -35,18 +36,47 @@ func fetch(url string, ch chan<- string) {
 	start := time.Now()
 	resp, err := http.Get(url)
 	if err != nil {
-		ch <- fmt.Sprint(err) // send to channel ch
+		ch <- fmt.Sprint(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Create a unique filename to save the response content
+	fileName := fmt.Sprintf("response-%d-%s.html", time.Now().UnixNano(), urlToFilename(url))
+	outFile, err := os.Create(fileName)
+	if err != nil {
+		ch <- fmt.Sprintf("error creating file %s: %v", fileName, err)
+		return
+	}
+	defer outFile.Close()
+
+	nbytes, err := io.Copy(outFile, resp.Body)
+	if err != nil {
+		ch <- fmt.Sprintf("while reading %s and writing to %s: %v", url, fileName, err)
 		return
 	}
 
-	nbytes, err := io.Copy(io.Discard, resp.Body)
-	resp.Body.Close() // don't leak resources
-	if err != nil {
-		ch <- fmt.Sprintf("while reading %s: %v", url, err)
-		return
-	}
 	secs := time.Since(start).Seconds()
-	ch <- fmt.Sprintf("%.2fs  %7d  %s", secs, nbytes, url)
+	// Send the file path, time, and size back to the channel
+	ch <- fmt.Sprintf("%.2fs  %7d  %s (saved to %s)", secs, nbytes, url, fileName)
+}
+
+// Helper function: converts a URL to a safe filename (very simplified, may not handle all URLs)
+func urlToFilename(url string) string {
+	// Remove protocol part
+	s := strings.ReplaceAll(url, "http://", "")
+	s = strings.ReplaceAll(s, "https://", "")
+	// Replace characters not allowed in filenames
+	s = strings.ReplaceAll(s, "/", "_")
+	s = strings.ReplaceAll(s, ":", "_")
+	s = strings.ReplaceAll(s, "?", "_")
+	s = strings.ReplaceAll(s, "=", "_")
+	s = strings.ReplaceAll(s, "&", "_")
+	// Optionally truncate long filenames
+	if len(s) > 50 {
+		s = s[:50]
+	}
+	return s
 }
 
 //!-
