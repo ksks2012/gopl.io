@@ -6,6 +6,8 @@
 
 // Fetch prints the content found at each specified URL.
 // Practice 1.7: Replace ioutil.ReadAll() by using io.Copy(dst, src)
+// Practice 1.8: Ensure the URL starts with "http://" or "https://"
+// Practice 1.9: Modify fetch to print out the status code of the HTTP protocol, which can be obtained from the resp.Status variable.
 package main
 
 import (
@@ -32,6 +34,8 @@ func main() {
 				fmt.Fprintf(os.Stderr, "fetch: error closing body for %s: %v\n", url, closeErr)
 			}
 		}()
+
+		fmt.Printf("Status Code for %s: %s\n", url, resp.Status)
 
 		out := os.Stdout // or any other io.Writer
 		_, err = io.Copy(out, resp.Body)
