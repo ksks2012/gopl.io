@@ -4,6 +4,7 @@
 // See page 21.
 
 // Server3 is an "echo" server that displays request parameters.
+// Practice 1.12: Add http://localhost:8000/?cycles=20 for dinamic cycles
 package main
 
 import (
@@ -15,6 +16,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"strconv"
 )
 
 var palette = []color.Color{
@@ -30,15 +32,15 @@ var palette = []color.Color{
 	color.RGBA{0xff, 0x00, 0x00, 0xff}, // 9: red
 }
 
-func lissajous(out io.Writer) {
+func lissajous(out io.Writer, inputCycles int) {
 	const (
-		cycles  = 5     // number of complete x oscillator revolutions
 		res     = 0.001 // angular resolution
 		size    = 100   // image canvas covers [-size..+size]
 		nframes = 64    // number of animation frames
 		delay   = 8     // delay between frames in 10ms units
 	)
-	freq := rand.Float64() * 3.0 // relative frequency of y oscillator
+	cycles := float64(inputCycles) // number of complete x oscillator revolutions
+	freq := rand.Float64() * 3.0   // relative frequency of y oscillator
 	anim := gif.GIF{LoopCount: nframes}
 	phase := 0.0 // phase difference
 
@@ -70,7 +72,14 @@ func lissajous(out io.Writer) {
 
 func main() {
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		lissajous(w)
+		// Parse the "cycles" query parameter, default to 5 if not provided
+		cycles := 5
+		if c := r.URL.Query().Get("cycles"); c != "" {
+			if n, err := strconv.Atoi(c); err == nil && n > 0 {
+				cycles = n
+			}
+		}
+		lissajous(w, cycles)
 	}
 
 	http.HandleFunc("/", handler)
