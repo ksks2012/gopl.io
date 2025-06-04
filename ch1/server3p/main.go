@@ -8,6 +8,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/gif"
@@ -32,7 +33,7 @@ var palette = []color.Color{
 	color.RGBA{0xff, 0x00, 0x00, 0xff}, // 9: red
 }
 
-func lissajous(out io.Writer, inputCycles int) {
+func lissajous(out io.Writer, inputCycles int) error {
 	const (
 		res     = 0.001 // angular resolution
 		size    = 100   // image canvas covers [-size..+size]
@@ -58,7 +59,7 @@ func lissajous(out io.Writer, inputCycles int) {
 			// Map t to a value between 1 and numDrawingColors
 			// (t / (cycles * 2 * math.Pi)) gets the proportion of t in the whole cycle (0.0 to 1.0)
 			// Multiply by numDrawingColors and add 1 to get the corresponding color index
-			colorIndex := uint8(1 + int(t/(cycles*2*math.Pi)*float64(numDrawingColors))%numDrawingColors)
+			colorIndex := uint8(1 + int(t*freq)%numDrawingColors)
 
 			img.SetColorIndex(size+int(x*size+0.5), size+int(y*size+0.5),
 				colorIndex)
@@ -67,19 +68,39 @@ func lissajous(out io.Writer, inputCycles int) {
 		anim.Delay = append(anim.Delay, delay)
 		anim.Image = append(anim.Image, img)
 	}
-	gif.EncodeAll(out, &anim) // NOTE: ignoring encoding errors
+	if err := gif.EncodeAll(out, &anim); err != nil {
+		log.Printf("lissajous: encoding error: %v", err)
+		return fmt.Errorf("lissajous: encoding error: %v", err)
+	}
+
+	return nil
 }
 
 func main() {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		// Parse the "cycles" query parameter, default to 5 if not provided
 		cycles := 5
-		if c := r.URL.Query().Get("cycles"); c != "" {
-			if n, err := strconv.Atoi(c); err == nil && n > 0 {
+		w.Header().Set("Content-Type", "image/gif")
+		if s := r.URL.Query().Get("cycles"); s != "" {
+			if n, err := strconv.Atoi(s); err != nil {
+				http.Error(w, fmt.Sprintf("Invalid cycles parameter: %q. Must be an integer.", s), http.StatusBadRequest)
+				log.Printf("Invalid cycles parameter: %q (error: %v)", s, err)
+				return
+			} else if n <= 0 {
+				http.Error(w, fmt.Sprintf("Invalid cycles parameter: %d. Must be a positive integer.", n), http.StatusBadRequest)
+				log.Printf("Invalid cycles parameter: %d (must be > 0)", n)
+				return
+			} else {
 				cycles = n
 			}
 		}
-		lissajous(w, cycles)
+
+		err := lissajous(w, cycles)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error generating lissajous: %v", err), http.StatusInternalServerError)
+			log.Printf("Error generating lissajous: %v", err)
+			return
+		}
 	}
 
 	http.HandleFunc("/", handler)
