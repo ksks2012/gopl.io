@@ -5,6 +5,8 @@
 
 // (Package doc comment intentionally malformed to demonstrate golint.)
 // Pracice 2.3: Change the PopCount function to use a loop instead of a sequence of shifts and masks.
+// Practice 2.5: Implement PopCount using Kernighan's algorithm, which counts the number of set bits by repeatedly clearing the least significant bit set.
+
 // !+
 package popcountp
 
@@ -35,6 +37,16 @@ func PopCountLoop(x uint64) int {
 		if x&(1<<i) != 0 {
 			n++
 		}
+	}
+	return n
+}
+
+// PopCountKernighan returns the population count of x using Kernighan's algorithm.
+func PopCountKernighan(x uint64) int {
+	n := 0
+	for x != 0 {
+		x = x & (x - 1)
+		n++
 	}
 	return n
 }
