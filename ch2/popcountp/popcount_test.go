@@ -72,6 +72,12 @@ func BenchmarkPopCountLoop(b *testing.B) {
 	}
 }
 
+func BenchmarkPopCountBitShift(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		popcount.PopCountBitShift(0x1234567890ABCDEF)
+	}
+}
+
 func BenchmarkPopCountKernighan(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		popcount.PopCountKernighan(0x1234567890ABCDEF)
@@ -80,18 +86,20 @@ func BenchmarkPopCountKernighan(b *testing.B) {
 
 // Go 1.6, 3.7GHz i5-12600K
 // $ go test -cpu=4 -bench=. gopl.io/ch2/popcountp
-// BenchmarkPopCount-4             	1000000000	         0.1187 ns/op
-// BenchmarkBitCount-4             	1000000000	         0.1309 ns/op
-// BenchmarkPopCountByClearing-4   	80153720	        15.50 ns/op
-// BenchmarkPopCountByShifting-4   	64560848	        18.26 ns/op
-// BenchmarkPopCountLoop-4         	66691446	        18.58 ns/op
-// BenchmarkPopCountKernighan-4    	76319629	        15.82 ns/op
+// BenchmarkPopCount-4             	1000000000	         0.1242 ns/op
+// BenchmarkBitCount-4             	1000000000	         0.1154 ns/op
+// BenchmarkPopCountByClearing-4   	76888119	        15.10 ns/op
+// BenchmarkPopCountByShifting-4   	64204569	        18.53 ns/op
+// BenchmarkPopCountLoop-4         	53352876	        18.92 ns/op
+// BenchmarkPopCountBitShift-4     	64808871	        18.21 ns/op
+// BenchmarkPopCountKernighan-4    	78000027	        15.38 ns/op
 
 // Go 1.6, 3.7GHz i5-12600K
 // $ go test -cpu=8 -bench=. gopl.io/ch2/popcountp
-// BenchmarkPopCount-8             	1000000000	         0.1141 ns/op
-// BenchmarkBitCount-8             	1000000000	         0.1157 ns/op
-// BenchmarkPopCountByClearing-8   	76763002	        16.05 ns/op
-// BenchmarkPopCountByShifting-8   	64865430	        18.06 ns/op
-// BenchmarkPopCountLoop-8         	64134643	        18.24 ns/op
-// BenchmarkPopCountKernighan-8    	70834881	        15.25 ns/op
+// BenchmarkPopCount-8             	1000000000	         0.1218 ns/op
+// BenchmarkBitCount-8             	1000000000	         0.1258 ns/op
+// BenchmarkPopCountByClearing-8   	75029352	        19.00 ns/op
+// BenchmarkPopCountByShifting-8   	47478366	        25.92 ns/op
+// BenchmarkPopCountLoop-8         	59248833	        25.08 ns/op
+// BenchmarkPopCountBitShift-8     	59969768	        19.29 ns/op
+// BenchmarkPopCountKernighan-8    	71434494	        16.59 ns/op

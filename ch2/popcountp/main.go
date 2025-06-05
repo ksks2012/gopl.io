@@ -5,6 +5,7 @@
 
 // (Package doc comment intentionally malformed to demonstrate golint.)
 // Pracice 2.3: Change the PopCount function to use a loop instead of a sequence of shifts and masks.
+// Practice 2.4: Implement PopCount using bit shifts and masks, which counts the number of set bits by checking each bit position.
 // Practice 2.5: Implement PopCount using Kernighan's algorithm, which counts the number of set bits by repeatedly clearing the least significant bit set.
 
 // !+
@@ -36,6 +37,16 @@ func PopCountLoop(x uint64) int {
 	for i := uint(0); i < 64; i++ {
 		if x&(1<<i) != 0 {
 			n++
+		}
+	}
+	return n
+}
+
+func PopCountBitShift(x uint64) int {
+	n := 0
+	for i := 0; i < 64; i++ {
+		if (x>>i)&1 == 1 {
+			n += 1
 		}
 	}
 	return n
