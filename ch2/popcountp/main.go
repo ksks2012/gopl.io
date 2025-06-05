@@ -34,10 +34,8 @@ func PopCount(x uint64) int {
 
 func PopCountLoop(x uint64) int {
 	n := 0
-	for i := uint(0); i < 64; i++ {
-		if x&(1<<i) != 0 {
-			n++
-		}
+	for i := 0; i < 8; i++ {
+		n += int(pc[byte(x>>(i*8))])
 	}
 	return n
 }

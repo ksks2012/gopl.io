@@ -86,20 +86,20 @@ func BenchmarkPopCountKernighan(b *testing.B) {
 
 // Go 1.6, 3.7GHz i5-12600K
 // $ go test -cpu=4 -bench=. gopl.io/ch2/popcountp
-// BenchmarkPopCount-4             	1000000000	         0.1242 ns/op
-// BenchmarkBitCount-4             	1000000000	         0.1154 ns/op
-// BenchmarkPopCountByClearing-4   	76888119	        15.10 ns/op
-// BenchmarkPopCountByShifting-4   	64204569	        18.53 ns/op
-// BenchmarkPopCountLoop-4         	53352876	        18.92 ns/op
-// BenchmarkPopCountBitShift-4     	64808871	        18.21 ns/op
-// BenchmarkPopCountKernighan-4    	78000027	        15.38 ns/op
+// BenchmarkPopCount-4             	1000000000	         0.1228 ns/op
+// BenchmarkBitCount-4             	1000000000	         0.1236 ns/op
+// BenchmarkPopCountByClearing-4   	68302428	        17.84 ns/op
+// BenchmarkPopCountByShifting-4   	59744020	        19.94 ns/op
+// BenchmarkPopCountLoop-4         	293707866	         4.835 ns/op
+// BenchmarkPopCountBitShift-4     	39682567	        27.08 ns/op
+// BenchmarkPopCountKernighan-4    	56548359	        21.77 ns/op
 
 // Go 1.6, 3.7GHz i5-12600K
 // $ go test -cpu=8 -bench=. gopl.io/ch2/popcountp
-// BenchmarkPopCount-8             	1000000000	         0.1218 ns/op
-// BenchmarkBitCount-8             	1000000000	         0.1258 ns/op
-// BenchmarkPopCountByClearing-8   	75029352	        19.00 ns/op
-// BenchmarkPopCountByShifting-8   	47478366	        25.92 ns/op
-// BenchmarkPopCountLoop-8         	59248833	        25.08 ns/op
-// BenchmarkPopCountBitShift-8     	59969768	        19.29 ns/op
-// BenchmarkPopCountKernighan-8    	71434494	        16.59 ns/op
+// BenchmarkPopCount-8             	1000000000	         0.1230 ns/op
+// BenchmarkBitCount-8             	1000000000	         0.1289 ns/op
+// BenchmarkPopCountByClearing-8   	76124686	        15.55 ns/op
+// BenchmarkPopCountByShifting-8   	63246339	        18.80 ns/op
+// BenchmarkPopCountLoop-8         	292454241	         3.985 ns/op
+// BenchmarkPopCountBitShift-8     	64737747	        18.91 ns/op
+// BenchmarkPopCountKernighan-8    	77210163	        15.82 ns/op
