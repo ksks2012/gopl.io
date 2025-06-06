@@ -6,6 +6,7 @@
 // Rev reverses an array using a pointer to the array.
 // Practice 4.3: Rev reverses a slice using a pointer to the slice.
 // Practice 4.4: Implement a rotate function that rotates a slice left by n positions in one loop.
+// Practice 4.5: Implement functions to remove adjacent duplicates for int and string slices
 package revp
 
 func ReverseArrayPtr(ptr *[6]int) {
@@ -60,4 +61,32 @@ func RotateInPlace(s []int, n int) {
 	ReverseSlice(s[:n])
 	ReverseSlice(s[n:])
 	ReverseSlice(s)
+}
+
+func RemoveAdjacentDuplicatesInt(s []int) []int {
+	if len(s) == 0 {
+		return s
+	}
+	j := 0
+	for i := 1; i < len(s); i++ {
+		if s[i] != s[j] {
+			j++
+			s[j] = s[i]
+		}
+	}
+	return s[:j+1]
+}
+
+func RemoveAdjacentDuplicatesString(s []string) []string {
+	if len(s) == 0 {
+		return s
+	}
+	j := 0
+	for i := 1; i < len(s); i++ {
+		if s[i] != s[j] {
+			j++
+			s[j] = s[i]
+		}
+	}
+	return s[:j+1]
 }

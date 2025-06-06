@@ -113,3 +113,123 @@ func TestRotateInPlace(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveAdjacentDuplicates(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []int
+		expected []int
+	}{
+		{
+			name:     "no duplicates",
+			input:    []int{1, 2, 3, 4, 5},
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			name:     "all duplicates",
+			input:    []int{7, 7, 7, 7},
+			expected: []int{7},
+		},
+		{
+			name:     "adjacent duplicates",
+			input:    []int{1, 1, 2, 2, 2, 3, 3, 4, 5, 5},
+			expected: []int{1, 2, 3, 4, 5},
+		},
+		{
+			name:     "non-adjacent duplicates",
+			input:    []int{1, 2, 1, 2, 1},
+			expected: []int{1, 2, 1, 2, 1},
+		},
+		{
+			name:     "empty slice",
+			input:    []int{},
+			expected: []int{},
+		},
+		{
+			name:     "single element",
+			input:    []int{42},
+			expected: []int{42},
+		},
+		{
+			name:     "long run at end",
+			input:    []int{1, 2, 3, 4, 4, 4, 4},
+			expected: []int{1, 2, 3, 4},
+		},
+		{
+			name:     "long run at start",
+			input:    []int{5, 5, 5, 2, 3},
+			expected: []int{5, 2, 3},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inputCopy := make([]int, len(tt.input))
+			copy(inputCopy, tt.input)
+			got := revp.RemoveAdjacentDuplicatesInt(inputCopy)
+			if !reflect.DeepEqual(got, tt.expected) {
+				t.Errorf("RemoveAdjacentDuplicates(%v) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRemoveAdjacentDuplicatesString(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []string
+		expected []string
+	}{
+		{
+			name:     "no duplicates",
+			input:    []string{"a", "b", "c", "d"},
+			expected: []string{"a", "b", "c", "d"},
+		},
+		{
+			name:     "all duplicates",
+			input:    []string{"x", "x", "x", "x"},
+			expected: []string{"x"},
+		},
+		{
+			name:     "adjacent duplicates",
+			input:    []string{"a", "a", "b", "b", "b", "c", "c", "d"},
+			expected: []string{"a", "b", "c", "d"},
+		},
+		{
+			name:     "non-adjacent duplicates",
+			input:    []string{"a", "b", "a", "b", "a"},
+			expected: []string{"a", "b", "a", "b", "a"},
+		},
+		{
+			name:     "empty slice",
+			input:    []string{},
+			expected: []string{},
+		},
+		{
+			name:     "single element",
+			input:    []string{"hello"},
+			expected: []string{"hello"},
+		},
+		{
+			name:     "long run at end",
+			input:    []string{"a", "b", "c", "c", "c"},
+			expected: []string{"a", "b", "c"},
+		},
+		{
+			name:     "long run at start",
+			input:    []string{"z", "z", "z", "y", "x"},
+			expected: []string{"z", "y", "x"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inputCopy := make([]string, len(tt.input))
+			copy(inputCopy, tt.input)
+			got := revp.RemoveAdjacentDuplicatesString(inputCopy)
+			if !reflect.DeepEqual(got, tt.expected) {
+				t.Errorf("RemoveAdjacentDuplicatesString(%v) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
