@@ -4,6 +4,8 @@
 // See page 86.
 
 // Rev reverses an array using a pointer to the array.
+// Practice 4.3: Rev reverses a slice using a pointer to the slice.
+// Practice 4.4: Implement a rotate function that rotates a slice left by n positions in one loop.
 package main
 
 import (
@@ -22,6 +24,9 @@ func main() {
 	s := []int{0, 1, 2, 3, 4, 5}
 	reverseSlice(s)
 	fmt.Println("Slice: ", s) // "[5 4 3 2 1 0]"
+
+	s = rotate(s, 2)
+	fmt.Println("Rotated Slice: ", s) // "[2 3 4 5 0 1]"')
 
 	input := bufio.NewScanner(os.Stdin)
 outer:
@@ -50,4 +55,27 @@ func reverseSlice(s []int) {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
 		s[i], s[j] = s[j], s[i]
 	}
+}
+
+func rotate(s []int, n int) []int {
+	if len(s) == 0 || n == 0 {
+		return s
+	}
+
+	n %= len(s)
+	if n < 0 {
+		n += len(s)
+	}
+
+	if n == 0 {
+		return s
+	}
+
+	rotated := make([]int, len(s))
+
+	copy(rotated, s[n:])
+
+	copy(rotated[len(s)-n:], s[:n])
+
+	return rotated
 }
