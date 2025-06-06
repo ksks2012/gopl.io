@@ -42,3 +42,22 @@ func Rotate(s []int, n int) []int {
 
 	return rotated
 }
+
+func RotateInPlace(s []int, n int) {
+	if len(s) == 0 || n == 0 {
+		return
+	}
+
+	n %= len(s)
+	if n < 0 {
+		n += len(s)
+	}
+
+	if n == 0 {
+		return
+	}
+
+	ReverseSlice(s[:n])
+	ReverseSlice(s[n:])
+	ReverseSlice(s)
+}

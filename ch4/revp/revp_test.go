@@ -1,6 +1,7 @@
 package revp_test
 
 import (
+	"reflect"
 	"testing"
 
 	"gopl.io/ch4/revp"
@@ -47,5 +48,68 @@ func TestRotate(t *testing.T) {
 			t.Errorf("Rotate(s, 4) = %v, want %v", got, want)
 			break
 		}
+	}
+}
+
+func TestRotateInPlace(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []int
+		n        int
+		expected []int
+	}{
+		{
+			name:     "rotate by 0",
+			input:    []int{0, 1, 2, 3, 4, 5},
+			n:        0,
+			expected: []int{0, 1, 2, 3, 4, 5},
+		},
+		{
+			name:     "rotate by 2",
+			input:    []int{0, 1, 2, 3, 4, 5},
+			n:        2,
+			expected: []int{2, 3, 4, 5, 0, 1},
+		},
+		{
+			name:     "rotate by len(s)",
+			input:    []int{0, 1, 2, 3, 4, 5},
+			n:        6,
+			expected: []int{0, 1, 2, 3, 4, 5},
+		},
+		{
+			name:     "rotate by negative",
+			input:    []int{0, 1, 2, 3, 4, 5},
+			n:        -2,
+			expected: []int{4, 5, 0, 1, 2, 3},
+		},
+		{
+			name:     "rotate by more than len(s)",
+			input:    []int{0, 1, 2, 3, 4, 5},
+			n:        8,
+			expected: []int{2, 3, 4, 5, 0, 1},
+		},
+		{
+			name:     "empty slice",
+			input:    []int{},
+			n:        3,
+			expected: []int{},
+		},
+		{
+			name:     "single element",
+			input:    []int{42},
+			n:        1,
+			expected: []int{42},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := make([]int, len(tt.input))
+			copy(s, tt.input)
+			revp.RotateInPlace(s, tt.n)
+			if !reflect.DeepEqual(s, tt.expected) {
+				t.Errorf("RotateInPlace(%v, %d) = %v, want %v", tt.input, tt.n, s, tt.expected)
+			}
+		})
 	}
 }
