@@ -7,7 +7,13 @@
 // Practice 4.3: Rev reverses a slice using a pointer to the slice.
 // Practice 4.4: Implement a rotate function that rotates a slice left by n positions in one loop.
 // Practice 4.5: Implement functions to remove adjacent duplicates for int and string slices
+// Practice 4.6: Implement a function to remove adjacent spaces from a byte slice
 package revp
+
+import (
+	"bytes"
+	"unicode"
+)
 
 func ReverseArrayPtr(ptr *[6]int) {
 	for i, j := 0, len(*ptr)-1; i < j; i, j = i+1, j-1 {
@@ -89,4 +95,42 @@ func RemoveAdjacentDuplicatesString(s []string) []string {
 		}
 	}
 	return s[:j+1]
+}
+
+func RemoveAdjacentSpace(b []byte) []byte {
+	if len(b) == 0 {
+		return b
+	}
+
+	runes := bytes.Runes(b)
+	if len(runes) == 0 {
+		return b[:0]
+	}
+
+	wasPrevSpace := unicode.IsSpace(runes[0])
+	if wasPrevSpace {
+		// Normalize to a single ASCII space
+		runes[0] = ' '
+	}
+
+	j := 0
+	for i := 1; i < len(runes); i++ {
+		isCurrentSpace := unicode.IsSpace(runes[i])
+
+		if isCurrentSpace {
+			if !wasPrevSpace {
+				j++
+				// Always normalize to a single ASCII space
+				runes[j] = ' '
+				wasPrevSpace = true
+			}
+		} else {
+			j++
+			runes[j] = runes[i]
+			// Reset flag as the last written char is not a space
+			wasPrevSpace = false
+		}
+	}
+
+	return []byte(string(runes[:j+1]))
 }

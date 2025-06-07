@@ -1,8 +1,10 @@
 package revp_test
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
+	"unicode"
 
 	"gopl.io/ch4/revp"
 )
@@ -229,6 +231,94 @@ func TestRemoveAdjacentDuplicatesString(t *testing.T) {
 			got := revp.RemoveAdjacentDuplicatesString(inputCopy)
 			if !reflect.DeepEqual(got, tt.expected) {
 				t.Errorf("RemoveAdjacentDuplicatesString(%v) = %v, want %v", tt.input, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestRemoveAdjacentSpace(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []byte
+		expected []byte
+	}{
+		{
+			name:     "no spaces",
+			input:    []byte("abc"),
+			expected: []byte("abc"),
+		},
+		{
+			name:     "single space",
+			input:    []byte("a b c"),
+			expected: []byte("a b c"),
+		},
+		{
+			name:     "multiple adjacent spaces",
+			input:    []byte("a  b   c"),
+			expected: []byte("a b c"),
+		},
+		{
+			name:     "spaces at start and end",
+			input:    []byte("   abc   "),
+			expected: []byte(" abc "),
+		},
+		{
+			name:     "all spaces",
+			input:    []byte("     "),
+			expected: []byte(" "),
+		},
+		{
+			name:     "empty input",
+			input:    []byte(""),
+			expected: []byte(""),
+		},
+		{
+			name:     "single character",
+			input:    []byte("x"),
+			expected: []byte("x"),
+		},
+		{
+			name:     "tab and space",
+			input:    []byte("a \t  b"),
+			expected: []byte("a b"),
+		},
+		{
+			name:     "mixed unicode spaces",
+			input:    []byte("a\u00A0\u00A0b"),
+			expected: []byte("a b"),
+		},
+		{
+			name:     "newline and spaces",
+			input:    []byte("a\n\n b"),
+			expected: []byte("a b"),
+		},
+		{
+			name:     "complex mixed spaces",
+			input:    []byte(" Hello \t\tWorld\n\r  Go! "),
+			expected: []byte(" Hello World Go! "),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inputCopy := make([]byte, len(tt.input))
+			copy(inputCopy, tt.input)
+			got := revp.RemoveAdjacentSpace(inputCopy)
+			if !reflect.DeepEqual(got, tt.expected) {
+				t.Errorf("RemoveAdjacentSpace(%q) = %q (len %d), want %q (len %d)",
+					tt.input, got, len(got), tt.expected, len(tt.expected))
+			}
+
+			// Check for adjacent spaces in the result
+			if len(got) > 0 {
+				runesGot := bytes.Runes(got)
+				for i := 1; i < len(runesGot); i++ {
+					if unicode.IsSpace(runesGot[i]) && unicode.IsSpace(runesGot[i-1]) {
+						t.Errorf("RemoveAdjacentSpace(%q) result has adjacent spaces at rune index %d: %q",
+							tt.input, i, string(got))
+						break
+					}
+				}
 			}
 		})
 	}
