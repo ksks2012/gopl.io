@@ -8,6 +8,7 @@
 // Practice 4.4: Implement a rotate function that rotates a slice left by n positions in one loop.
 // Practice 4.5: Implement functions to remove adjacent duplicates for int and string slices
 // Practice 4.6: Implement a function to remove adjacent spaces from a byte slice
+// Practice 4.7: Implement a function to reverse the bytes with UTF-8 encoding
 package revp
 
 import (
@@ -133,4 +134,29 @@ func RemoveAdjacentSpace(b []byte) []byte {
 	}
 
 	return []byte(string(runes[:j+1]))
+}
+
+func ReverseBytesInPlace(b []byte) {
+	for i, j := 0, len(b)-1; i < j; i, j = i+1, j-1 {
+		b[i], b[j] = b[j], b[i]
+	}
+}
+
+func ReverseUTF8(b []byte) []byte {
+	if len(b) == 0 {
+		return b
+	}
+
+	runes := bytes.Runes(b)
+	if len(runes) == 0 {
+		return b[:0]
+	}
+
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	copy(b, string(runes))
+	b = b[:len(string(runes))]
+
+	return b
 }

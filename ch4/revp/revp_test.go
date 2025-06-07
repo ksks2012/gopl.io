@@ -323,3 +323,67 @@ func TestRemoveAdjacentSpace(t *testing.T) {
 		})
 	}
 }
+
+func TestReverseUTF8(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "ASCII",
+			input:    "abcdef",
+			expected: "fedcba",
+		},
+		{
+			name:     "single rune",
+			input:    "世",
+			expected: "世",
+		},
+		{
+			name:     "multi-rune",
+			input:    "hello 世界",
+			expected: "界世 olleh",
+		},
+		{
+			name:     "emoji",
+			input:    "🙂🙃",
+			expected: "🙃🙂",
+		},
+		{
+			name:     "mixed ASCII and emoji",
+			input:    "A🙂B🙃C",
+			expected: "C🙃B🙂A",
+		},
+		{
+			name:     "combining characters",
+			input:    "e\u0301cole", // "école" with combining acute
+			expected: "eloće",
+		},
+		{
+			name:     "multi-byte runes",
+			input:    "¡Hola, 世界!",
+			expected: "!界世 ,aloH¡",
+		},
+		{
+			name:     "surrogate pairs",
+			input:    "𐍈𐍉", // Gothic letters, 4-byte UTF-8
+			expected: "𐍉𐍈",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inputBytes := []byte(tt.input)
+			got := revp.ReverseUTF8(inputBytes)
+			if string(got) != tt.expected {
+				t.Errorf("ReverseUTF8(%q) = %q, want %q", tt.input, string(got), tt.expected)
+			}
+		})
+	}
+}
