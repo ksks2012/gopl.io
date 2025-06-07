@@ -5,6 +5,8 @@
 //!+
 
 // Charcount computes counts of Unicode characters.
+// Practice 4.8: Add CharCount for counting letters, digits, and numbers.
+// Practice 4.9:
 package charcountp
 
 import (
@@ -12,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -73,4 +76,22 @@ func CharCount(mp map[rune]int) {
 	fmt.Printf("Letters: %d\n", letterCount)
 	fmt.Printf("Digits: %d\n", digitCount)
 	fmt.Printf("Numbers: %d\n", numberCount)
+}
+
+func WordFreq(s string) map[string]int {
+	freq := make(map[string]int)
+	scanner := bufio.NewScanner(strings.NewReader(s))
+
+	scanner.Split(bufio.ScanWords) // set the split mode to words
+
+	for scanner.Scan() {
+		word := scanner.Text()
+		freq[word]++
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintf(os.Stderr, "WordFreq: reading input: %v\n", err)
+		os.Exit(1)
+	}
+	return freq
 }

@@ -74,3 +74,67 @@ func TestCharCount(t *testing.T) {
 		})
 	}
 }
+
+func TestWordFreq(t *testing.T) {
+	// Save original os.Stdin
+	origStdin := os.Stdin
+	defer func() { os.Stdin = origStdin }()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected map[string]int
+	}{
+		{
+			name:     "empty input",
+			input:    "",
+			expected: map[string]int{},
+		},
+		{
+			name:  "single word",
+			input: "hello",
+			expected: map[string]int{
+				"hello": 1,
+			},
+		},
+		{
+			name:  "multiple words",
+			input: "foo bar foo",
+			expected: map[string]int{
+				"foo": 2,
+				"bar": 1,
+			},
+		},
+		{
+			name:  "words with punctuation",
+			input: "hi! hi, hi.",
+			expected: map[string]int{
+				"hi!": 1,
+				"hi,": 1,
+				"hi.": 1,
+			},
+		},
+		{
+			name:  "unicode words",
+			input: "你好 你好 hello",
+			expected: map[string]int{
+				"你好":    2,
+				"hello": 1,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := charcountp.WordFreq(tt.input)
+			if len(got) != len(tt.expected) {
+				t.Errorf("expected map of length %d, got %d", len(tt.expected), len(got))
+			}
+			for k, v := range tt.expected {
+				if got[k] != v {
+					t.Errorf("for word %q: expected %d, got %d", k, v, got[k])
+				}
+			}
+		})
+	}
+}
