@@ -42,11 +42,15 @@ func main() {
 		}
 	}
 
-	for k, issues := range mp {
-		fmt.Printf("\n%s:\n", k)
-		for _, item := range issues {
-			fmt.Printf("#%-5d %9.9s %.55s\n",
-				item.Number, item.User.Login, item.Title)
+	categories := []string{"<30 days", "30-365 days", ">365 days"}
+
+	for _, k := range categories {
+		if issues, ok := mp[k]; ok {
+			fmt.Printf("\n%s:\n", k)
+			for _, item := range issues {
+				fmt.Printf("#%-5d %9.9s %.55s\n",
+					item.Number, item.User.Login, item.Title)
+			}
 		}
 	}
 }
