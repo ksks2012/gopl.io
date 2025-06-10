@@ -7,11 +7,13 @@
 // Findlinks1 prints the links in an HTML document read from standard input.
 // Practice 5.1: Recursively visit the children of a node, using NextSibling and FirstChild.
 // Practice 5.2: Write a function that counts the number of times each element appears in an HTML tree.
+// Practice 5.3: Write a function that visits the text attributes of an HTML tree, skipping <script> and <style> elements.
 package main
 
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"golang.org/x/net/html"
 )
@@ -47,6 +49,13 @@ func main() {
 	fmt.Println("\nElement counts:")
 	for name, count := range elementCounts {
 		fmt.Printf("%s: %d\n", name, count)
+	}
+
+	// Example of visiting text attributes
+	texts := visitText(nil, doc)
+	fmt.Println("\nText found:")
+	for _, text := range texts {
+		fmt.Println(text)
 	}
 }
 
@@ -85,6 +94,30 @@ func visit(links []string, n *html.Node) []string {
 	}
 
 	return links
+}
+
+// It skips <script> and <style> elements.
+func visitText(texts []string, n *html.Node) []string {
+	if n.Type == html.ElementNode && (n.Data == "script" || n.Data == "style") {
+		return texts
+	}
+
+	if n.Type == html.TextNode {
+		text := strings.TrimSpace(n.Data)
+		if text != "" {
+			texts = append(texts, text)
+		}
+	}
+
+	// Recursive
+	if n.FirstChild != nil {
+		texts = visitText(texts, n.FirstChild)
+	}
+
+	if n.NextSibling != nil {
+		texts = visitText(texts, n.NextSibling)
+	}
+	return texts
 }
 
 /*
