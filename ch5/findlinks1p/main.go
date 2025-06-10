@@ -8,6 +8,7 @@
 // Practice 5.1: Recursively visit the children of a node, using NextSibling and FirstChild.
 // Practice 5.2: Write a function that counts the number of times each element appears in an HTML tree.
 // Practice 5.3: Write a function that visits the text attributes of an HTML tree, skipping <script> and <style> elements.
+// Practice 5.4: Write a function that collects the src attributes of <img> and <script> elements, and the href attributes of <link> elements.
 package main
 
 import (
@@ -57,6 +58,44 @@ func main() {
 	for _, text := range texts {
 		fmt.Println(text)
 	}
+
+	assetMap := map[string]string{
+		"img":    "src",
+		"script": "src",
+		"":       "href",
+	}
+	otherAssets := findAssets(nil, doc, assetMap)
+	fmt.Println("\nOther assets found (img src, script src, link href):")
+	for _, asset := range otherAssets {
+		fmt.Println(asset)
+	}
+
+}
+
+// findAssets is a generalized function to collect specific attributes from various element types.
+// The assetMap maps element names (e.g., "img", "script") to their attribute keys (e.g., "src", "href").
+func findAssets(assets []string, n *html.Node, assetMap map[string]string) []string {
+	if n.Type == html.ElementNode {
+		attrKey, exists := assetMap[n.Data]
+		if exists {
+			for _, a := range n.Attr {
+				if a.Key == attrKey {
+					assets = append(assets, a.Val)
+					break
+				}
+			}
+		}
+	}
+
+	if n.FirstChild != nil {
+		assets = findAssets(assets, n.FirstChild, assetMap)
+	}
+
+	if n.NextSibling != nil {
+		assets = findAssets(assets, n.NextSibling, assetMap)
+	}
+
+	return assets
 }
 
 // countElements recursively traverses the HTML tree and records the occurrence count of each element name.
