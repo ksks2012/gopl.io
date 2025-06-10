@@ -6,6 +6,7 @@
 
 // Findlinks1 prints the links in an HTML document read from standard input.
 // Practice 5.1: Recursively visit the children of a node, using NextSibling and FirstChild.
+// Practice 5.2: Write a function that counts the number of times each element appears in an HTML tree.
 package main
 
 import (
@@ -33,14 +34,38 @@ func main() {
 		fmt.Fprintf(os.Stderr, "findlinks1: %v\n", err)
 		os.Exit(1)
 	}
-	for _, link := range visit(nil, doc) {
+
+	links := visit(nil, doc)
+	fmt.Println("Links found:")
+	for _, link := range links {
 		fmt.Println(link)
+	}
+
+	elementCounts := make(map[string]int)
+	countElements(elementCounts, doc)
+
+	fmt.Println("\nElement counts:")
+	for name, count := range elementCounts {
+		fmt.Printf("%s: %d\n", name, count)
 	}
 }
 
-//!-main
+// countElements recursively traverses the HTML tree and records the occurrence count of each element name.
+// It directly updates the provided map.
+func countElements(counts map[string]int, n *html.Node) {
+	if n.Type == html.ElementNode {
+		counts[n.Data]++
+	}
 
-// !+visit
+	if n.FirstChild != nil {
+		countElements(counts, n.FirstChild)
+	}
+
+	if n.NextSibling != nil {
+		countElements(counts, n.NextSibling)
+	}
+}
+
 // visit appends to links each link found in n and returns the result.
 func visit(links []string, n *html.Node) []string {
 	if n.Type == html.ElementNode && n.Data == "a" {
@@ -61,8 +86,6 @@ func visit(links []string, n *html.Node) []string {
 
 	return links
 }
-
-//!-visit
 
 /*
 //!+html
