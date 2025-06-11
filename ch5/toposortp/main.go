@@ -50,6 +50,9 @@ func main() {
 func topoSort(m map[string][]string) []string {
 	var order []string
 	seen := make(map[string]bool)
+
+	// This is a recursive DFS (Depth-First Search) traversal function.
+	// It visits each node in items and all its unvisited prerequisites.
 	var visitAll func(items []string)
 
 	visitAll = func(items []string) {
@@ -59,16 +62,6 @@ func topoSort(m map[string][]string) []string {
 				visitAll(m[item])
 				order = append(order, item)
 			}
-		}
-	}
-
-	// Rewritten section: directly iterate over the map's keys, without sorting.
-	// Here we collect all unique courses (keys and their prerequisites) as starting points.
-	allItems := make(map[string]bool)
-	for course, prereqs := range m {
-		allItems[course] = true
-		for _, prereq := range prereqs {
-			allItems[prereq] = true
 		}
 	}
 
