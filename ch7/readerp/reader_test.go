@@ -220,3 +220,133 @@ func TestOutline(t *testing.T) {
 		}
 	})
 }
+
+func TestLimitedReader_Read_Basic(t *testing.T) {
+	src := strings.NewReader("abcdef")
+	lr := LimitReader(src, 4)
+	buf := make([]byte, 10)
+	n, err := lr.Read(buf)
+	if n != 4 {
+		t.Errorf("expected n=4, got %d", n)
+	}
+	if err != io.EOF {
+		t.Errorf("expected err=io.EOF, got %v", err)
+	}
+	if string(buf[:n]) != "abcd" {
+		t.Errorf("expected buf='abcd', got '%s'", string(buf[:n]))
+	}
+
+	n, err = lr.Read(buf)
+	if n != 0 || err != io.EOF {
+		t.Errorf("expected n=0, err=io.EOF after limit reached, got n=%d, err=%v", n, err)
+	}
+}
+
+func TestLimitedReader_Read_Partial(t *testing.T) {
+	src := strings.NewReader("abcdef")
+	lr := LimitReader(src, 3)
+	buf := make([]byte, 2)
+	n, err := lr.Read(buf)
+	if n != 2 || err != nil {
+		t.Errorf("expected n=2, err=nil, got n=%d, err=%v", n, err)
+	}
+	if string(buf[:n]) != "ab" {
+		t.Errorf("expected buf='ab', got '%s'", string(buf[:n]))
+	}
+
+	n, err = lr.Read(buf)
+	if n != 1 || err != io.EOF {
+		t.Errorf("expected n=1, err=io.EOF, got n=%d, err=%v", n, err)
+	}
+	if string(buf[:n]) != "c" {
+		t.Errorf("expected buf='c', got '%s'", string(buf[:n]))
+	}
+
+	n, err = lr.Read(buf)
+	if n != 0 || err != io.EOF {
+		t.Errorf("expected n=0, err=io.EOF after EOF, got n=%d, err=%v", n, err)
+	}
+	n, err = lr.Read(buf)
+	if n != 0 || err != io.EOF {
+		t.Errorf("expected n=0, err=io.EOF on subsequent reads after EOF, got n=%d, err=%v", n, err)
+	}
+}
+
+func TestLimitedReader_Read_ZeroLimit(t *testing.T) {
+	src := strings.NewReader("abcdef")
+	lr := LimitReader(src, 0)
+	buf := make([]byte, 5)
+	n, err := lr.Read(buf)
+	if n != 0 {
+		t.Errorf("expected n=0, got %d", n)
+	}
+	if err != io.EOF {
+		t.Errorf("expected err=io.EOF, got %v", err)
+	}
+	n, err = lr.Read(buf)
+	if n != 0 || err != io.EOF {
+		t.Errorf("expected n=0, err=io.EOF on subsequent reads after EOF, got n=%d, err=%v", n, err)
+	}
+}
+
+func TestLimitedReader_Read_ExactLimit(t *testing.T) {
+	src := strings.NewReader("abcdef")
+	lr := LimitReader(src, 6)
+	buf := make([]byte, 6)
+	n, err := lr.Read(buf)
+	if n != 6 {
+		t.Errorf("expected n=6, got %d", n)
+	}
+	if err != io.EOF {
+		t.Errorf("expected err=io.EOF, got %v", err)
+	}
+	if string(buf[:n]) != "abcdef" {
+		t.Errorf("expected buf='abcdef', got '%s'", string(buf[:n]))
+	}
+	n, err = lr.Read(buf)
+	if n != 0 || err != io.EOF {
+		t.Errorf("expected n=0, err=io.EOF on subsequent reads after EOF, got n=%d, err=%v", n, err)
+	}
+}
+
+func TestLimitedReader_Read_MultipleSmallReads(t *testing.T) {
+	src := strings.NewReader("abcdef")
+	lr := LimitReader(src, 4)
+	buf := make([]byte, 2)
+	n, err := lr.Read(buf)
+	if n != 2 || err != nil {
+		t.Errorf("expected n=2, err=nil, got n=%d, err=%v", n, err)
+	}
+	if string(buf[:n]) != "ab" {
+		t.Errorf("expected buf='ab', got '%s'", string(buf[:n]))
+	}
+	n, err = lr.Read(buf)
+	if n != 2 || err != io.EOF {
+		t.Errorf("expected n=2, err=io.EOF, got n=%d, err=%v", n, err)
+	}
+	if string(buf[:n]) != "cd" {
+		t.Errorf("expected buf='cd', got '%s'", string(buf[:n]))
+	}
+	n, err = lr.Read(buf)
+	if n != 0 || err != io.EOF {
+		t.Errorf("expected n=0, err=io.EOF after EOF, got n=%d, err=%v", n, err)
+	}
+
+	t.Run("UnderlyingReaderEOFBeforeLimit", func(t *testing.T) {
+		srcShort := strings.NewReader("xy")
+		lrShort := LimitReader(srcShort, 5)
+
+		n, err := lrShort.Read(buf)
+		if n != 2 || err != nil {
+			t.Errorf("expected n=2, err=nil, got n=%d, err=%v", n, err)
+		}
+		if string(buf[:n]) != "xy" {
+			t.Errorf("expected buf='xy', got '%s'", string(buf[:n]))
+		}
+
+		n, err = lrShort.Read(buf)
+		if n != 0 || err != io.EOF {
+			t.Errorf("expected n=0, err=io.EOF, got n=%d, err=%v", n, err)
+		}
+	})
+}

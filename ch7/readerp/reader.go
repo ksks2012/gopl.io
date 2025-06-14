@@ -1,4 +1,5 @@
 // Practice 7.4: Write a StringReader type that implements io.Reader.
+// Practice 7.5: Write a LimitedReader type that implements io.Reader.
 package reader
 
 import (
@@ -86,4 +87,36 @@ func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
 	if post != nil {
 		post(n)
 	}
+}
+
+type LimitedReader struct {
+	r io.Reader
+	n int64
+}
+
+func LimitReader(r io.Reader, n int64) io.Reader {
+	return &LimitedReader{r: r, n: n}
+}
+
+func (lr *LimitedReader) Read(p []byte) (n int, err error) {
+	if lr.n <= 0 {
+		return 0, io.EOF
+	}
+
+	limit := int64(len(p))
+	if limit > lr.n {
+		limit = lr.n
+	}
+
+	bytesReadFromUnderlying, errFromUnderlying := lr.r.Read(p[:limit])
+	if errFromUnderlying != nil {
+		return bytesReadFromUnderlying, errFromUnderlying
+	}
+
+	lr.n -= int64(bytesReadFromUnderlying)
+	if lr.n <= 0 {
+		return bytesReadFromUnderlying, io.EOF
+	}
+
+	return bytesReadFromUnderlying, nil
 }
