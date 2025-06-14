@@ -4,7 +4,7 @@
 // See page 101.
 
 // Package treesort provides insertion sort using an unbalanced binary tree.
-// Practice 7.3:
+// Practice 7.3: Implement String() for the Tree type.
 package treesort
 
 import "strconv"
