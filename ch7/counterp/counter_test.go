@@ -1,6 +1,8 @@
 package counter
 
 import (
+	"bytes"
+	"io"
 	"testing"
 )
 
@@ -104,5 +106,69 @@ func TestLineCounter_Write(t *testing.T) {
 	c2.Write([]byte("last line"))
 	if c2 != 2 {
 		t.Errorf("expected 2 lines, got %d", c2)
+	}
+}
+func TestCountingWriter(t *testing.T) {
+	var buf bytes.Buffer
+	w, count := CountingWriter(&buf)
+
+	n, err := w.Write([]byte("abc"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if n != 3 {
+		t.Errorf("expected 3 bytes written, got %d", n)
+	}
+	if *count != 3 {
+		t.Errorf("expected count to be 3, got %d", *count)
+	}
+	if buf.String() != "abc" {
+		t.Errorf("expected buffer to be 'abc', got %q", buf.String())
+	}
+
+	n, err = w.Write([]byte("defg"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if n != 4 {
+		t.Errorf("expected 4 bytes written, got %d", n)
+	}
+	if *count != 7 {
+		t.Errorf("expected count to be 7, got %d", *count)
+	}
+	if buf.String() != "abcdefg" {
+		t.Errorf("expected buffer to be 'abcdefg', got %q", buf.String())
+	}
+
+	// Test writing empty slice
+	n, err = w.Write([]byte(""))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if n != 0 {
+		t.Errorf("expected 0 bytes written, got %d", n)
+	}
+	if *count != 7 {
+		t.Errorf("expected count to remain 7, got %d", *count)
+	}
+}
+
+type errorWriter struct{}
+
+func (e *errorWriter) Write(p []byte) (int, error) {
+	return 0, io.ErrClosedPipe
+}
+
+func TestCountingWriter_ErrorPropagation(t *testing.T) {
+	w, count := CountingWriter(&errorWriter{})
+	n, err := w.Write([]byte("fail"))
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if n != 0 {
+		t.Errorf("expected 0 bytes written on error, got %d", n)
+	}
+	if *count != 0 {
+		t.Errorf("expected count to be 0 on error, got %d", *count)
 	}
 }
