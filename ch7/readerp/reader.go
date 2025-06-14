@@ -1,3 +1,4 @@
+// Practice 7.4: Write a StringReader type that implements io.Reader.
 package reader
 
 import (
