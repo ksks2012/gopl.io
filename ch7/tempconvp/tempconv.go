@@ -4,6 +4,7 @@
 // See page 180.
 
 // Package tempconv performs Celsius and Fahrenheit temperature computations.
+// Practice 7.6: Add a Kelvin type and functions to convert between Kelvin and Celsius and Fahrenheit.
 package tempconv
 
 import (
