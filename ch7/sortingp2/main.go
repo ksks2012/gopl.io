@@ -4,6 +4,7 @@
 // See page 187.
 
 // Sorting sorts a music playlist into a variety of orders.
+// Practice 7.10: Write IsPalindrome(s sort.Interface) bool, which reports whether the elements of s are in the same order forwards and backwards. For example, IsPalindrome(sort.IntSlice{1, 2, 3, 2, 1}) should return true, but IsPalindrome(sort.IntSlice{1, 2, 3}) should return false.
 package main
 
 import (
