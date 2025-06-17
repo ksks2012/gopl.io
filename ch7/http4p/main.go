@@ -6,15 +6,67 @@
 // Http4 is an e-commerce server that registers the /list and /price
 // endpoint by calling http.HandleFunc.
 // Practice 7.11: Implement create, update, and delete operations
+// Practice 7.12: Render the item list as an HTML table
 package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 )
+
+// ----------------------------------------------------
+// HTML Template Definition
+// ----------------------------------------------------
+
+// Define the HTML template for the item list.
+// We parse it once globally for efficiency.
+var itemListTemplate = template.Must(template.New("itemlist").Parse(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Store Inventory</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table {
+            width: 50%; /* Adjust as needed */
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Store Inventory</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $item, $price := .}}
+            <tr>
+                <td>{{$item}}</td>
+                <td>{{$price}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</body>
+</html>
+`))
 
 //!+main
 
@@ -41,9 +93,17 @@ type database struct {
 
 func (db database) list(w http.ResponseWriter, req *http.Request) {
 	db.mu.Lock()
-	defer db.mu.Unlock()
-	for item, price := range db.items {
-		fmt.Fprintf(w, "%s: %s\n", item, price)
+	itemsToRender := make(map[string]dollars)
+	for k, v := range db.items {
+		itemsToRender[k] = v
+	}
+	db.mu.Unlock()
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	if err := itemListTemplate.Execute(w, itemsToRender); err != nil {
+		log.Printf("Template execution error for /list: %v", err)
+		http.Error(w, "Error rendering page", http.StatusInternalServerError)
 	}
 }
 
@@ -65,8 +125,6 @@ func (db database) price(w http.ResponseWriter, req *http.Request) {
 func (db database) create(w http.ResponseWriter, req *http.Request) {
 	item := req.URL.Query().Get("item")
 	priceStr := req.URL.Query().Get("price")
-
-	fmt.Print("create called with item: ", item, " and price: ", priceStr, "\n")
 
 	if item == "" {
 		w.WriteHeader(http.StatusBadRequest) // 400 Bad Request
