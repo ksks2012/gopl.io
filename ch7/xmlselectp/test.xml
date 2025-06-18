@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>My Page</title>
+  </head>
+  <body>
+    <div id="page" class="container wide">
+      <h1>Welcome</h1>
+      <p class="intro">This is an introduction.</p>
+      <div class="content">
+        <p id="first-para">Some content here.</p>
+        <span class="highlight">A span.</span>
+      </div>
+    </div>
+    <footer class="footer wide">
+      <p>Copyright 2025</p>
+    </footer>
+  </body>
+</html>
