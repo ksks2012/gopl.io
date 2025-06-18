@@ -9,3 +9,5 @@
 *.html
 *.svg
 *.json
+
+**/bin/**
