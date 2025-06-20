@@ -4,6 +4,7 @@
 // See page 227.
 
 // Netcat is a simple read/write client for TCP servers.
+// Prcatice 8.3: Modify the netcat program to close the write side of the connection
 package main
 
 import (
@@ -13,7 +14,7 @@ import (
 	"os"
 )
 
-//!+
+// !+
 func main() {
 	conn, err := net.Dial("tcp", "localhost:8000")
 	if err != nil {
@@ -26,7 +27,9 @@ func main() {
 		done <- struct{}{} // signal the main goroutine
 	}()
 	mustCopy(conn, os.Stdin)
-	conn.Close()
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		tcpConn.CloseWrite()
+	}
 	<-done // wait for background goroutine to finish
 }
 
