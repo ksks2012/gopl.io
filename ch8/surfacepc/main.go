@@ -5,172 +5,58 @@
 //!+
 
 // Surface computes an SVG rendering of a 3-D surface function.
-// Practice 3.1: Check return value of f(), ignore invalid polygon
-// Practice 3.2: Render other functions (eggbox, moguls, saddle)
-// Practice 3.3: Color polygons based on height (red for peaks, blue for valleys)
-// Practice 3.4: Create a web server to render SVG surface data.
-
 package main
 
 import (
 	"fmt"
-	"log"
 	"math"
-	"net/http"
-	"strconv"
 )
 
 const (
-	width, height = 600, 320                     // canvas size in pixels
-	cells         = 100                          // number of grid cells
-	xyrange       = 30.0                         // axis ranges (-xyrange..+xyrange)
-	xyscale       = float64(width) / 2 / xyrange // pixels per x or y unit (according to width)
-	zscale        = float64(height) * 0.4        // pixels per z unit (according to height)
-	angle         = math.Pi / 6                  // angle of x, y axes (=30°)
-
-	minZ_est = -1.8
-	maxZ_est = 1.8
+	width, height = 600, 320            // canvas size in pixels
+	cells         = 100                 // number of grid cells
+	xyrange       = 30.0                // axis ranges (-xyrange..+xyrange)
+	xyscale       = width / 2 / xyrange // pixels per x or y unit
+	zscale        = height * 0.4        // pixels per z unit
+	angle         = math.Pi / 6         // angle of x, y axes (=30°)
 )
 
 var sin30, cos30 = math.Sin(angle), math.Cos(angle) // sin(30°), cos(30°)
 
-type SurfaceFunc func(x, y float64) float64
-
-// sinc function
-func fSinc(x, y float64) float64 {
-	r := math.Hypot(x, y) // distance from (0,0)
-	if r == 0 {           // Avoid division by zero; math.Sin(0)/0 would result in NaN
-		return 1.0 // As r approaches 0, sin(r)/r approaches 1
-	}
-	return math.Sin(r) / r
-}
-
-// Egg Box pattern
-func fEggBox(x, y float64) float64 {
-	return 0.3 * (math.Sin(x) + math.Sin(y))
-}
-
-// Moguls pattern (a bit more complex, can be varied)
-func fMoguls(x, y float64) float64 {
-	return 0.1*(math.Sin(x*0.5)*math.Cos(y*0.5)+math.Sin(x*0.8)*math.Cos(y*0.8)) +
-		0.05*math.Sin(x*2)
-}
-
-// Saddle pattern
-func fSaddle(x, y float64) float64 {
-	return (x*x - y*y) / 500
-}
-
 func main() {
-	http.HandleFunc("/", handleSurface)
-	log.Fatal(http.ListenAndServe(":8000", nil))
-}
-
-func handleSurface(w http.ResponseWriter, r *http.Request) {
-	// 1. Set Content-Type header
-	w.Header().Set("Content-Type", "image/svg+xml")
-
-	// 2. Get configuration from URL query parameters (optional, adds flexibility)
-	// Example: /?width=800&height=400&type=saddle
-	var currentWidth, currentHeight int = 600, 320            // default values
-	var currentSurfaceFunc SurfaceFunc = fSinc                // default function
-	var currentMinZ, currentMaxZ float64 = minZ_est, maxZ_est // default Z range
-
-	if wStr := r.URL.Query().Get("width"); wStr != "" {
-		if w, err := strconv.Atoi(wStr); err == nil && w > 0 {
-			currentWidth = w
-		}
-	}
-	if hStr := r.URL.Query().Get("height"); hStr != "" {
-		if h, err := strconv.Atoi(hStr); err == nil && h > 0 {
-			currentHeight = h
-		}
-	}
-
-	surfaceType := r.URL.Query().Get("type")
-	switch surfaceType {
-	case "sinc":
-		currentSurfaceFunc = fSinc
-		currentMinZ, currentMaxZ = -0.2, 1.0
-	case "eggbox":
-		currentSurfaceFunc = fEggBox
-		currentMinZ, currentMaxZ = -0.6, 0.6
-	case "moguls":
-		currentSurfaceFunc = fMoguls
-		currentMinZ, currentMaxZ = -0.3, 0.3
-	case "saddle":
-		currentSurfaceFunc = fSaddle
-		currentMinZ, currentMaxZ = -1.8, 1.8
-	default:
-		fmt.Fprintf(w, "Invalid surface type: %s\n", surfaceType)
-		w.WriteHeader(http.StatusBadRequest)
-		// return
-	}
-
-	xyscale := float64(currentWidth) / 2 / xyrange // pixels per x or y unit
-	zscale := float64(currentHeight) * 0.4         // pixels per z unit
-
-	// 3. Write SVG data to the ResponseWriter
-	fmt.Fprintf(w, "<svg xmlns='http://www.w3.org/2000/svg' "+
-		"style='stroke: grey; stroke-width: 0.7' "+
-		"width='%d' height='%d'>", currentWidth, currentHeight)
-
+	fmt.Printf("<svg xmlns='http://www.w3.org/2000/svg' "+
+		"style='stroke: grey; fill: white; stroke-width: 0.7' "+
+		"width='%d' height='%d'>", width, height)
 	for i := 0; i < cells; i++ {
 		for j := 0; j < cells; j++ {
-			ax, ay, az, okA := corner(i+1, j, currentSurfaceFunc, float64(currentWidth), float64(currentHeight), xyscale, zscale)
-			bx, by, bz, okB := corner(i, j, currentSurfaceFunc, float64(currentWidth), float64(currentHeight), xyscale, zscale)
-			cx, cy, cz, okC := corner(i, j+1, currentSurfaceFunc, float64(currentWidth), float64(currentHeight), xyscale, zscale)
-			dx, dy, dz, okD := corner(i+1, j+1, currentSurfaceFunc, float64(currentWidth), float64(currentHeight), xyscale, zscale)
-
-			if !okA || !okB || !okC || !okD {
-				continue
-			}
-
-			avgZ := (az + bz + cz + dz) / 4.0
-			color := calculateColor(avgZ, currentMinZ, currentMaxZ)
-
-			fmt.Fprintf(w, "<polygon points='%g,%g %g,%g %g,%g %g,%g' fill='#%s'/>\n",
-				ax, ay, bx, by, cx, cy, dx, dy, color)
+			ax, ay := corner(i+1, j)
+			bx, by := corner(i, j)
+			cx, cy := corner(i, j+1)
+			dx, dy := corner(i+1, j+1)
+			fmt.Printf("<polygon points='%g,%g %g,%g %g,%g %g,%g'/>\n",
+				ax, ay, bx, by, cx, cy, dx, dy)
 		}
 	}
-	fmt.Fprintln(w, "</svg>")
-}
-func calculateColor(z, minZ, maxZ float64) string {
-	normalizedZ := (z - minZ) / (maxZ - minZ)
-	if normalizedZ < 0 {
-		normalizedZ = 0
-	} else if normalizedZ > 1 {
-		normalizedZ = 1
-	}
-
-	red := int(normalizedZ * 255)
-	blue := int((1 - normalizedZ) * 255)
-
-	if red < 0 {
-		red = 0
-	} else if red > 255 {
-		red = 255
-	}
-	if blue < 0 {
-		blue = 0
-	} else if blue > 255 {
-		blue = 255
-	}
-
-	return fmt.Sprintf("%02x%02x%02x", red, 0, blue)
+	fmt.Println("</svg>")
 }
 
-func corner(i, j int, f SurfaceFunc, canvasWidth, canvasHeight, xyscale, zscale float64) (float64, float64, float64, bool) {
+func corner(i, j int) (float64, float64) {
+	// Find point (x,y) at corner of cell (i,j).
 	x := xyrange * (float64(i)/cells - 0.5)
 	y := xyrange * (float64(j)/cells - 0.5)
 
+	// Compute surface height z.
 	z := f(x, y)
 
-	if math.IsNaN(z) || math.IsInf(z, 0) {
-		return 0, 0, 0, false
-	}
-
-	sx := canvasWidth/2 + (x-y)*cos30*xyscale
-	sy := canvasHeight/2 + (x+y)*sin30*xyscale - z*zscale
-	return sx, sy, z, true
+	// Project (x,y,z) isometrically onto 2-D SVG canvas (sx,sy).
+	sx := width/2 + (x-y)*cos30*xyscale
+	sy := height/2 + (x+y)*sin30*xyscale - z*zscale
+	return sx, sy
 }
+
+func f(x, y float64) float64 {
+	r := math.Hypot(x, y) // distance from (0,0)
+	return math.Sin(r) / r
+}
+
+//!-
