@@ -10,6 +10,8 @@ package main
 
 import (
 	"math"
+	"runtime"
+	"sync"
 )
 
 const (
@@ -36,21 +38,51 @@ func saveAsSVG(fileName string, polygons [][8]float64) {
 func concurrent() {
 	polygons := make([][8]float64, 0, cells*cells)
 	polygonCh := make(chan [8]float64, cells*cells)
-	for i := 0; i < cells; i++ {
-		go func(i int) {
-			for j := 0; j < cells; j++ {
-				ax, ay := corner(i+1, j)
-				bx, by := corner(i, j)
-				cx, cy := corner(i, j+1)
-				dx, dy := corner(i+1, j+1)
-				polygonCh <- [8]float64{ax, ay, bx, by, cx, cy, dx, dy}
+
+	numWorkers := runtime.NumCPU()
+	if numWorkers == 0 {
+		numWorkers = 1
+	}
+
+	var wg sync.WaitGroup // Use sync.WaitGroup to wait for all worker goroutines to finish
+
+	// Distribute the cells*cells tasks among numWorkers goroutines
+	// Each worker processes a portion of the rows
+
+	rowsPerWorker := cells / numWorkers
+	if cells%numWorkers != 0 {
+		rowsPerWorker++
+	}
+
+	for k := 0; k < numWorkers; k++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			startRow := workerID * rowsPerWorker
+			endRow := startRow + rowsPerWorker
+			if endRow > cells {
+				endRow = cells
 			}
-		}(i)
+
+			for i := startRow; i < endRow; i++ {
+				for j := 0; j < cells; j++ {
+					ax, ay := corner(i+1, j)
+					bx, by := corner(i, j)
+					cx, cy := corner(i, j+1)
+					dx, dy := corner(i+1, j+1)
+					polygonCh <- [8]float64{ax, ay, bx, by, cx, cy, dx, dy}
+				}
+			}
+		}(k)
 	}
-	for i := 0; i < cells*cells; i++ {
-		polygons = append(polygons, <-polygonCh)
-	}
+
+	wg.Wait()
 	close(polygonCh)
+
+	for p := range polygonCh {
+		polygons = append(polygons, p)
+	}
+
 	saveAsSVG("concurrent.svg", polygons)
 }
 
@@ -65,7 +97,7 @@ func basic() {
 			polygons = append(polygons, [8]float64{ax, ay, bx, by, cx, cy, dx, dy})
 		}
 	}
-	saveAsSVG("concurrent.svg", polygons)
+	saveAsSVG("basic.svg", polygons)
 }
 
 func corner(i, j int) (float64, float64) {
