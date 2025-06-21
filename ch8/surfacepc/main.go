@@ -5,10 +5,10 @@
 //!+
 
 // Surface computes an SVG rendering of a 3-D surface function.
+// Practice 8.5: Modify the surface program to use goroutines to compute the polygons concurrently.
 package main
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -26,6 +26,11 @@ var sin30, cos30 = math.Sin(angle), math.Cos(angle) // sin(30°), cos(30°)
 func main() {
 	basic()
 	concurrent()
+}
+
+func saveAsSVG(fileName string, polygons [][8]float64) {
+	// This function would save the polygons to an SVG file.
+	// Implementation is not shown here, as it is not part of the exercise.
 }
 
 func concurrent() {
@@ -46,15 +51,7 @@ func concurrent() {
 		polygons = append(polygons, <-polygonCh)
 	}
 	close(polygonCh)
-	fmt.Printf("<svg xmlns='http://www.w3.org/2000/svg' "+
-		"style='stroke: grey; fill: white; stroke-width: 0.7' "+
-		"width='%d' height='%d'>\n", width, height)
-	for _, p := range polygons {
-		fmt.Printf("<polygon points='%g,%g %g,%g %g,%g %g,%g'/>\n",
-			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7])
-	}
-	fmt.Println("</svg>")
-
+	saveAsSVG("concurrent.svg", polygons)
 }
 
 func basic() {
@@ -68,14 +65,7 @@ func basic() {
 			polygons = append(polygons, [8]float64{ax, ay, bx, by, cx, cy, dx, dy})
 		}
 	}
-	fmt.Printf("<svg xmlns='http://www.w3.org/2000/svg' "+
-		"style='stroke: grey; fill: white; stroke-width: 0.7' "+
-		"width='%d' height='%d'>\n", width, height)
-	for _, p := range polygons {
-		fmt.Printf("<polygon points='%g,%g %g,%g %g,%g %g,%g'/>\n",
-			p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7])
-	}
-	fmt.Println("</svg>")
+	saveAsSVG("concurrent.svg", polygons)
 }
 
 func corner(i, j int) (float64, float64) {
